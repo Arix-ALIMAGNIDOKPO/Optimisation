@@ -10,6 +10,7 @@ df.rename(columns={
     'Disponibilités (Heures)': 'Créneau horaire'
 }, inplace=True)
 
+
 # Convertir la colonne 'Date' en objet date
 df['Date'] = pd.to_datetime(df['Date']).dt.date
 
