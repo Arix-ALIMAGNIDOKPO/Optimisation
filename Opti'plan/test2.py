@@ -5,6 +5,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+import pandas as pd
 
 @dataclass
 class Professor:
@@ -36,6 +37,7 @@ class Defense:
     examiner_id: int
     supervisor_id: int
 
+"""
 # Génération des données pour les professeurs
 random.seed(42)  # Pour des résultats reproductibles
 professor_names = [
@@ -54,7 +56,48 @@ for i in range(10):
     specialties = random.sample(fields, k=random.randint(1, 2))
     availability = list(range(0, 40))  # Supposons qu'ils sont disponibles sur tous les créneaux
     professors.append(Professor(prof_id, name, rank, specialties, availability))
+"""
+# Lecture du fichier Excel
+df_professors = pd.read_excel('professors_data.xlsx')
 
+# Définition des grades acceptés dans votre code
+grade_mapping = {
+    'Docteur': 'Docteur',
+    'Ingénieur': 'Professeur',
+    'Professeur': 'Professeur',
+    'MA': 'MC',
+    'MC': 'MC'
+}
+
+# Liste pour stocker les objets Professor
+professors = []
+for index, row in df_professors.iterrows():
+    prof_id = row['Numéro']
+    name = f"{row['Nom']} {row['Prénoms']}"
+    grade = row['Grade']
+
+    # Conversion du grade en utilisant le mapping
+    rank = grade_mapping.get(grade, 'Professeur')  # Par défaut, considérer comme 'Professeur' si non trouvé
+
+    # Traitement des disponibilités
+    availability = []
+    raw_availability = eval(row['Disponibilité'])  # Utiliser `eval` pour convertir la chaîne en liste de listes
+    for day_index, day_slots in enumerate(raw_availability):
+        for slot_index, is_available in enumerate(day_slots):
+            if is_available:  # Si la valeur est `True`, ajouter l'indice du créneau
+                availability.append(day_index * 8 + slot_index)
+
+    # Traitement des spécialités
+    specialties = [s.strip() for s in row['Speciality'].split(',')]
+
+    # Création de l'objet Professor
+    professors.append(Professor(prof_id, name, rank, specialties, availability))
+
+# Affichage des données des professeurs pour vérification
+for prof in professors:
+    print(prof)
+
+"""
 # Génération des données pour les étudiants
 student_names = [
     "Étudiant " + str(i + 1) for i in range(100)
@@ -69,6 +112,20 @@ for i in range(100):
     field = random.choice(fields)
     supervisor = random.choice(professors)
     students.append(Student(student_id, name, level, field, supervisor.id))
+"""
+
+# Nouveau code pour lire les étudiants à partir du fichier Excel
+df_students = pd.read_excel('students_data.xlsx')
+
+students = []
+for index, row in df_students.iterrows():
+    student_id = row['Numéro']
+    name = row['Nom']
+    level = row['Cycle']
+    field = row['Filière']
+    supervisor_id = row['MM']  # Assurez-vous que cette colonne contient l'ID de l'encadreur
+
+    students.append(Student(student_id, name, level, field, supervisor_id))
 
 # Génération des salles
 rooms = []
